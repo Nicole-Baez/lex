@@ -93,21 +93,22 @@ typedef enum {
 int main(int argc, char *argv[])
 
 {
-    char *reservedWord[] = {"null", "begin", "call", "const", "do", "else", "end", "if", "odd", "procedure", "read", "then",
-    "var", "while", "write"};
+    //char reservedWord[norw + 1] = {"null", "begin", "call", "const", "do", "else", "end", "if", "odd", "procedure", "read", "then",
+    //"var", "while", "write"};
 
     
     
     //char *identifier[] = ""; //to store the identifier name (to check if length exceeds)
 
-    char *groupLexemes[] = {""};
+    char groupLexemes[strmax + 1];
 
 
     char *nameTable[] = {""}; //to store the name table
 
     int *tokenList[] = {0}; // to store all the tokens 
 
-    char ch = ""; //to read each char
+    char ch; //to read each char
+
 
     
     if (argc == 2)
@@ -116,54 +117,83 @@ int main(int argc, char *argv[])
 
         printf("Source Program:\n");
         int i = 0;
+        //use buffers to check little by little if it is a reserved word, special character, or an identifier
+        int mightBeComment = 0;
         int commentCheck = 0;
+        int specialChars = 0;
+
         
-        while (ch = fgetc(ip) != EOF)
+        
+        while (1)
         {
             
-            //ignores comments
-            //fix: the comment is not a string, it's a character, each element has to be processed separately
-            if (ch == '/*'){
-                commentCheck = 1;
+            ch = fgetc(ip);
+
+            if (ch == EOF){
+                break;
+            }
+            
+
+
+            if (ch == '/'){
+
+                mightBeComment = 1;
                 continue;
+
+            }
+
+
+            if(mightBeComment){
+
+                if(ch == '*')
+                {
+                    commentCheck = 1;
+                    continue;
+                }
+
+
             }
 
             if(commentCheck)
             {
-                if(ch == '*/'){
-                    commentCheck = 0;
+                if (ch != '*'){
+                    mightBeComment = 0;
+                    continue;
                 }
 
+
+                else{
+                    mightBeComment = 1;
+                    continue;
+                }
+            }
+
+
+            if(ch == '\\')
+            {
+                specialChars = 1;
                 continue;
             }
 
-
-            /*For printing purposes. It prints the source code just as is. */
-             if (ch == ' '){
-                printf(" ");
-             }
-             
-             if (ch == '\t'){
-                printf("\t");
-             }
-
-             if (ch == '\n'){
-                printf("\n");
-             }
-
-             if (ch == '\r'){
-                printf("\r");
-             }
-
-             
-            printf("%c", ch);
-
-            if (ch != ' ' || ch != '\t' || ch != '\n' || ch != '\r')
+            if (specialChars)
             {
-                groupLexemes[i] = ch;
+                if(ch != 'r' && ch != 'n' && ch )
             }
+    
+             
+            putchar(ch);
+
+    
+    
+
+
 
         }
+
+
+        printf("GROUP LEXEME\n");
+
+        
 
 
         fclose(ip);
