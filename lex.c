@@ -22,59 +22,53 @@ Instructor: Dr. Jie Lin
 Due Date: Monday, March 3, 2026
 */
 
-
-
-//structure for enumeration
-typedef enum {
-    skipsym = 1 , // Skip / ignore token
-    identsym = 2, // Identifier
-    numbersym = 3, // Number
-    beginsym = 4, // begin
-    endsym = 5, // end
-    ifsym = 6, //if
-    fisym = 7, // fi
-    thensym = 8, // then
-    whilesym = 9, // while
-    dosym = 10, // do
-    odsym = 11, // od
-    callsym = 12, // call
-    constsym = 13, // const
-    varsym = 14, // var
-    procsym = 15, // procedure
-    writesym = 16, // write
-    readsym = 17, // read
-    elsesym = 18, // else
-    plussym = 19, // +
-    minussym = 20, // -
-    multsym = 21, // *
-    slashsym = 22, // /
-    eqsym = 23, // =
-    neqsym = 24, // <>
-    lessym = 25, // <
-    leqsym = 26, // <=
-    gtrsym = 27, // >
-    geqsym = 28, // >=
-    lparentsym = 29, // (
-    rparentsym = 30, // )
-    commasym = 31, // ,
+// structure for enumeration
+typedef enum
+{
+    skipsym = 1,       // Skip / ignore token
+    identsym = 2,      // Identifier
+    numbersym = 3,     // Number
+    beginsym = 4,      // begin
+    endsym = 5,        // end
+    ifsym = 6,         // if
+    fisym = 7,         // fi
+    thensym = 8,       // then
+    whilesym = 9,      // while
+    dosym = 10,        // do
+    odsym = 11,        // od
+    callsym = 12,      // call
+    constsym = 13,     // const
+    varsym = 14,       // var
+    procsym = 15,      // procedure
+    writesym = 16,     // write
+    readsym = 17,      // read
+    elsesym = 18,      // else
+    plussym = 19,      // +
+    minussym = 20,     // -
+    multsym = 21,      // *
+    slashsym = 22,     // /
+    eqsym = 23,        // =
+    neqsym = 24,       // <>
+    lessym = 25,       // <
+    leqsym = 26,       // <=
+    gtrsym = 27,       // >
+    geqsym = 28,       // >=
+    lparentsym = 29,   // (
+    rparentsym = 30,   // )
+    commasym = 31,     // ,
     semicolonsym = 32, // ;
-    periodsym = 33, // .
-    becomessym = 34, // :=
+    periodsym = 33,    // .
+    becomessym = 34,   // :=
 } TokenType;
-
-
-
-
-
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define norw 15 //num of reserved words
-#define imax 99999 //max num of integer value(can only be 5 digits long)
-#define cmax 11 //identifier length
-#define strmax 256 //str max length
+#define norw 15    // num of reserved words
+#define imax 99999 // max num of integer value(can only be 5 digits long)
+#define cmax 11    // identifier length
+#define strmax 256 // str max length
 
 /*
     Error messages:
@@ -85,127 +79,113 @@ typedef enum {
 
 */
 
-//function that maps reserved words
+// check for reserved word or identifier
 
-//function that maps special symbols
+char *reservedOrIdentifier(char *buffer, int bufferLength, char *reservedWord[])
+{
+    char *str;
+    int length;
 
+    for (length = 0; length < bufferLength; length++)
+    {
+        str[length] = buffer[length];
+    }
+
+    for (int j = 0; j < norw; j++)
+    {
+        if (strcmp(reservedWord[j], str) == 0)
+        {
+            printf("RESERVED WORD WOW");
+            return str;
+        }
+    }
+
+    return "";
+}
+
+// function that maps reserved words
+
+// function that maps special symbols
+
+// function that checks for escape sequences
 
 int main(int argc, char *argv[])
 
 {
-    //char reservedWord[norw + 1] = {"null", "begin", "call", "const", "do", "else", "end", "if", "odd", "procedure", "read", "then",
-    //"var", "while", "write"};
+    char *reservedWord[] = {"null", "begin", "call", "const", "do", "else", "end", "if", "odd", "procedure", "read", "then", "var", "while", "write"};
 
-    
-    
-    //char *identifier[] = ""; //to store the identifier name (to check if length exceeds)
+    // make one for special symbol
 
-    char groupLexemes[strmax + 1];
+    // char *identifier[] = ""; //to store the identifier name (to check if length exceeds)
 
+    char *bufferLexeme;
+    // declare another buffer to determine: reserved word, special symbol, letter, digit, and identifier
+    //(do lookup to check)
 
-    char *nameTable[] = {""}; //to store the name table
+    char *nameTable[] = {""}; // to store the name table
 
-    int *tokenList[] = {0}; // to store all the tokens 
+    int *tokenList[] = {0}; // to store all the tokens
 
-    char ch; //to read each char
+    char ch; // to read each char
 
-
-    
     if (argc == 2)
     {
         FILE *ip = fopen(argv[1], "r");
 
         printf("Source Program:\n");
-        int i = 0;
-        //use buffers to check little by little if it is a reserved word, special character, or an identifier
-        int mightBeComment = 0;
-        int commentCheck = 0;
-        int specialChars = 0;
 
-        
-        
+        int i = 0;
+        // use buffers to check little by little if it is a reserved word, special character, or an identifier
+
         while (1)
         {
-            
+
             ch = fgetc(ip);
 
-            if (ch == EOF){
+            if (ch == EOF)
+            {
                 break;
             }
-            
 
-
-            if (ch == '/'){
-
-                mightBeComment = 1;
-                continue;
-
-            }
-
-
-            if(mightBeComment){
-
-                if(ch == '*')
-                {
-                    commentCheck = 1;
-                    continue;
-                }
-
-
-            }
-
-            if(commentCheck)
+            // check if ch is a letter
+            if (ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z')
             {
-                if (ch != '*'){
-                    mightBeComment = 0;
-                    continue;
-                }
+                bufferLexeme[i] = ch;
 
+                // returns the string
 
-                else{
-                    mightBeComment = 1;
-                    continue;
-                }
+                char *word = reservedOrIdentifier(bufferLexeme, i, reservedWord);
+
+                printf("HERE IS THE WORD: %s ITERATION: %d", word, i);
+
+                // pass the string to check for the token number, if string is not empty
             }
 
-
-            if(ch == '\\')
+            /*else
             {
-                specialChars = 1;
-                continue;
-            }
 
-            if (specialChars)
-            {
-                if(ch != 'r' && ch != 'n' && ch )
-            }
-    
-             
+                //if ch is not a letter
+
+
+                //if ch is a special character
+
+
+            }*/
+
+            // check if ch is a special symbol
+
+            // check if ch is an escape sequence
+
             putchar(ch);
-
-    
-    
-
-
-
         }
 
-
-        printf("GROUP LEXEME\n");
-
-        
-
-
         fclose(ip);
-
-
-
     }
 
-    else if(argc > 2){
+    else if (argc > 2)
+    {
         printf("Extra arguments were provided.\n");
         printf("Try: ./00_args 123\n");
-        
     }
     else
     {
