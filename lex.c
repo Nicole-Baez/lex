@@ -24,13 +24,6 @@ Due Date: Monday, March 3, 2026
 
 
 
-
-
-
-
-
-
-
 //structure for enumeration
 typedef enum {
     skipsym = 1 , // Skip / ignore token
@@ -129,6 +122,7 @@ int main(int argc, char *argv[])
         {
             
             //ignores comments
+            //fix: the comment is not a string, it's a character, each element has to be processed separately
             if (ch == '/*'){
                 commentCheck = 1;
                 continue;
