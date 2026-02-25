@@ -76,11 +76,15 @@ typedef enum
     2- Number too long
     3- Invalid symbols (idk how to check this)
 
+    Falta:
+    - el name table
+    - printear el lexeme, el name table, y el token list
+
 
 */
 
 // Check for reserved word or identifier
-char *reservedOrIdentifier(char buffer[], int bufferLength, char *reservedWord[], char specialSymbol[], char *nameTable[])
+char *reservedOrIdentifier(char buffer[], int bufferLength, char *reservedWord[], char *nameTable[])
 {
 
     int length;
@@ -268,6 +272,14 @@ TokenType mapSpecialSym(char *buff)
     {
         return becomessym;
     }
+
+    // escape sequences
+    if (strcmp(buff, " ") == 0 || strcmp(buff, "\n") == 0 || strcmp(buff, "\t") == 0 || strcmp(buff, "\r") == 0)
+    {
+        return 0;
+    }
+
+    return skipsym; // invalid symbol
 }
 
 // function that checks for escape sequences
@@ -276,10 +288,6 @@ int main(int argc, char *argv[])
 
 {
     char *reservedWord[] = {"null", "begin", "call", "const", "do", "else", "end", "if", "odd", "procedure", "read", "then", "var", "while", "write"};
-
-    char specialSymbol[] = {'+', '-', '*', '/', '(', ')', '=', ',', '.', '#', '<', '>', '$', '%', ';'};
-
-    // char *identifier[] = ""; //to store the identifier name (to check if length exceeds)
 
     char *bufferLexeme = malloc(strmax + 1);
 
@@ -332,7 +340,7 @@ int main(int argc, char *argv[])
 
                 bufferLexeme[i + 1] = '\0';
 
-                char *word = reservedOrIdentifier(bufferLexeme, i, reservedWord, specialSymbol, nameTable);
+                char *word = reservedOrIdentifier(bufferLexeme, i, reservedWord, nameTable);
 
                 // pass the string to check for the token number, if string is not empty
                 if (strcmp(word, "identifier") == 0 || (strcmp(word, " ") != 0)) //|| strcmp(word, "identifier") == 0
@@ -347,8 +355,6 @@ int main(int argc, char *argv[])
                     // clear the buffer
                     bufferLexeme[0] = '\0';
                     i = 0;
-
-                    // continue;
                 }
             }
 
@@ -369,6 +375,9 @@ int main(int argc, char *argv[])
                 int token = numbersym;
                 tokenList[tokenCount] = token;
                 tokenCount++;
+
+                bufferLexeme[0] = '\0';
+                i = 0;
             }
 
             if (!((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= 0 && ch <= 9)))
@@ -382,68 +391,79 @@ int main(int argc, char *argv[])
                     ch = fgetc(ip);
                     if (!((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= 0 && ch <= 9)))
                     {
-                        if (ch != ' ' || ch != '\\')
-                        {
-                            bufferLexeme[i + 1] = ch;
-                        }
+
+                        bufferLexeme[i + 1] = ch;
                     }
 
                     bufferLexeme[i + 2] = '\0';
 
                     // llamar mapsymbol, meter
+                    int token = mapSpecialSym(bufferLexeme);
+
+                    if (token != 0)
+                    {
+                        tokenList[tokenCount] = token;
+                        tokenCount++;
+
+                        // clear the buffer
+                        bufferLexeme[0] = '\0';
+                        i = 0;
+                        continue;
+                    }
                 }
 
                 if (ch == '/')
                 {
                     ch = fgetc(ip);
 
+                    printf("CH: %c\n", ch);
+
                     if (ch == '*')
                     {
                         // ignorar comentario
 
-                        while (ch = fgetc(ip) != '/')
+                        while ((ch = fgetc(ip)) != '/')
                         {
                             continue;
                         }
                     }
 
                     // llamar
+                    int token = mapSpecialSym(bufferLexeme);
+
+                    if (token != 0)
+                    {
+
+                        tokenList[tokenCount] = token;
+                        tokenCount++;
+
+                        // clear the buffer
+                        bufferLexeme[0] = '\0';
+                        i = 0;
+                        continue;
+                    }
                 }
 
                 else
                 {
+
                     bufferLexeme[i + 1] = '\0';
                     // lama mapsymbol
+
+                    int token = mapSpecialSym(bufferLexeme);
+
+                    if (token != 0)
+                    {
+                        tokenList[tokenCount] = token;
+                        tokenCount++;
+
+                        // clear the buffer
+                        bufferLexeme[0] = '\0';
+                        i = 0;
+                        continue;
+                    }
                 }
             }
-
-            /*
-
-            if(!((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= 0 && ch <= 9)))
-            {
-
-                bufferLexeme[i] = ch;
-
-
-                while (!((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= 0 && ch <= 9)))
-                {
-                    bufferLexeme[i] = ch;
-                    ch = fgetc(ip);
-                    i++;
-                }
-
-                bufferLexeme[i + 1] = '\0';
-
-                int token = mapSpecialSymbol();
-
-
-
-            }
-
-
-
-
-             */
         }
 
         for (int i = 0; i < tokenCount; i++)
