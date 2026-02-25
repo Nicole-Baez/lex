@@ -131,6 +131,7 @@ int main(int argc, char *argv[])
     // char *identifier[] = ""; //to store the identifier name (to check if length exceeds)
 
     char *bufferLexeme = malloc(strmax + 1);
+    
     // declare another buffer to determine: reserved word, special symbol, letter, digit, and identifier
     //(do lookup to check)
 
@@ -187,7 +188,7 @@ int main(int argc, char *argv[])
                 }
 
                 else
-                
+
                 {
                     // could be a number, special character, escape sequence, or identifier
                 }
