@@ -80,12 +80,10 @@ typedef enum
 */
 
 // Check for reserved word or identifier
-char *reservedOrIdentifier(char buffer[], int bufferLength, char *reservedWord[], char *specialSymbol)
+char *reservedOrIdentifier(char buffer[], int bufferLength, char *reservedWord[], char specialSymbol[], char *nameTable[])
 {
     char *str = malloc(bufferLength + 1);
     int length;
-
-    int identifier = 0;
 
     for (length = 0; length < bufferLength; length++)
     {
@@ -102,20 +100,100 @@ char *reservedOrIdentifier(char buffer[], int bufferLength, char *reservedWord[]
             return str;
         }
 
-        if (strcmp(specialSymbol[j], str[j]) == 0)
+        if (specialSymbol[j] == str[j])
         {
             // if not in name table
             printf("Identifier!!");
-            identifier = 1;
-            // store in name table
+            // store in name table without the special symbol
+
             return "Success";
         }
     }
 
-    return ""; //"" -> not a reserved word or an identifier
+    return ""; // "" -> not a reserved word or an identifier
 }
 
 // function that maps reserved words
+TokenType mapReservedWord(char *str)
+{
+
+    if (strcmp(str, "begin") == 0)
+    {
+        return beginsym;
+    }
+
+    if (strcmp(str, "end") == 0)
+    {
+        return endsym;
+    }
+
+    if (strcmp(str, "if") == 0)
+    {
+        return ifsym;
+    }
+
+    if (strcmp(str, "fi") == 0)
+    {
+        return fisym;
+    }
+
+    if (strcmp(str, "then") == 0)
+    {
+        return thensym;
+    }
+
+    if (strcmp(str, "while") == 0)
+    {
+        return whilesym;
+    }
+
+    if (strcmp(str, "do") == 0)
+    {
+        return dosym;
+    }
+
+    if (strcmp(str, "od") == 0)
+    {
+        return odsym;
+    }
+
+    if (strcmp(str, "call") == 0)
+    {
+        return callsym;
+    }
+
+    if (strcmp(str, "const") == 0)
+    {
+        return constsym;
+    }
+
+    if (strcmp(str, "var") == 0)
+    {
+        return varsym;
+    }
+
+    if (strcmp(str, "procedure") == 0)
+    {
+        return procsym;
+    }
+
+    if (strcmp(str, "write") == 0)
+    {
+        return writesym;
+    }
+
+    if (strcmp(str, "read") == 0)
+    {
+        return readsym;
+    }
+
+    if (strcmp(str, "else") == 0)
+    {
+        return elsesym;
+    }
+
+    return 0; // it is not a reserved word
+}
 
 // function that maps special symbols
 
@@ -126,12 +204,12 @@ int main(int argc, char *argv[])
 {
     char *reservedWord[] = {"null", "begin", "call", "const", "do", "else", "end", "if", "odd", "procedure", "read", "then", "var", "while", "write"};
 
-    char *specialSymbol[] = {'+', '-', '*', '/', '(', ')', '=', ',', '.', '#', '<', '>', '$', '%', ';'};
+    char specialSymbol[] = {'+', '-', '*', '/', '(', ')', '=', ',', '.', '#', '<', '>', '$', '%', ';'};
 
     // char *identifier[] = ""; //to store the identifier name (to check if length exceeds)
 
     char *bufferLexeme = malloc(strmax + 1);
-    
+
     // declare another buffer to determine: reserved word, special symbol, letter, digit, and identifier
     //(do lookup to check)
 
@@ -167,24 +245,27 @@ int main(int argc, char *argv[])
                 bufferLexeme[i] = ch;
                 bufferLexeme[i + 1] = '\0';
 
-                char *word = reservedOrIdentifier(bufferLexeme, i, reservedWord, specialSymbol);
+                char *word = reservedOrIdentifier(bufferLexeme, i, reservedWord, specialSymbol, nameTable);
                 printf("Building the BUFFER: %s\n", bufferLexeme);
                 printf("HERE IS THE WORD: %s ITERATION: %d\n", word, i);
 
                 // pass the string to check for the token number, if string is not empty
-                // make a function that
-                if (word != "")
+                if (strcmp(word, "") != 0)
                 {
                     bufferLexeme[0] = '\0';
                     i = 0;
                     // call the function to identify the token number
+                    int token = mapReservedWord(word);
+                    printf("This is the token: %d\n", token);
 
                     continue;
                 }
 
                 if (strcmp(word, "Success") == 0)
                 {
-                    // returns identifier
+                    // returns identifier (already added to the name table), clear the buffer
+                    bufferLexeme[0] = '\0';
+                    i = 0;
                 }
 
                 else

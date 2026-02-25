@@ -81,9 +81,19 @@ This effectively "clears" the buffer since all string functions in C treat the s
 
 #### Round 3 (optional)
 
-**Prompt:** [Exact prompt/question]
-**AI Output:** [Summarize or paste the output]
-**Verification/Edits:** [How you verified accuracy or modified the output]
+**Prompt:** lex.c:210:30: error: incompatible integer to pointer conversion initializing 'char *' with an expression of type 'int' [-Wint-conversion] 210 | char *specialSymbol[] = {'+', '-', '*', '/', '(', ')', '=', ',', '.', '#', '<', '>', '$', '%', ';'}; What does this error mean
+**AI Output:** ChatGPT said the error was due to declaring the arrat as an array of pointers. It suggested I either
+change every element to be string literals or get rid of the * in the array.
+**Verification/Edits:** I removed the * from the array declaration and I still got other errors. I will ask
+about those errors. 
+
+#### Round 4 (optional)
+
+**Prompt:** if (strcmp(specialSymbol[j], str[j]) == 0) { // if not in name table printf("Identifier!!"); identifier = 1; // store in name table return "Success"; } 
+(This condition is giving me trouble, specialSymbol is declared as an array of characters)
+**AI Output:** ChatGPT said I was using strcmp incorrectly since I'm evaluating two characters instead of two strings. 
+**Verification/Edits:** I removed the strcmp and instead did the comparison using ==. It worked and the compilation
+errors went away. 
 
 ### Learning & Reflection
 
