@@ -22,7 +22,7 @@ Instructor: Dr. Jie Lin
 Due Date: Monday, March 3, 2026
 */
 
-// structure for enumeration
+// Structure for enumeration
 typedef enum
 {
     skipsym = 1,       // Skip / ignore token
@@ -67,7 +67,7 @@ typedef enum
 
 #define norw 15    // num of reserved words
 #define imax 99999 // max num of integer value(can only be 5 digits long)
-#define cmax 11    // identifier length
+#define idenmax 11 // identifier length
 #define strmax 256 // str max length
 
 /*
@@ -79,17 +79,20 @@ typedef enum
 
 */
 
-// check for reserved word or identifier
-
-char *reservedOrIdentifier(char *buffer, int bufferLength, char *reservedWord[])
+// Check for reserved word or identifier
+char *reservedOrIdentifier(char buffer[], int bufferLength, char *reservedWord[], char *specialSymbol)
 {
-    char *str;
+    char *str = malloc(bufferLength + 1);
     int length;
+
+    int identifier = 0;
 
     for (length = 0; length < bufferLength; length++)
     {
         str[length] = buffer[length];
     }
+
+    str[length] = '\0';
 
     for (int j = 0; j < norw; j++)
     {
@@ -98,9 +101,18 @@ char *reservedOrIdentifier(char *buffer, int bufferLength, char *reservedWord[])
             printf("RESERVED WORD WOW");
             return str;
         }
+
+        if (strcmp(specialSymbol[j], str[j]) == 0)
+        {
+            // if not in name table
+            printf("Identifier!!");
+            identifier = 1;
+            // store in name table
+            return "Success";
+        }
     }
 
-    return "";
+    return ""; //"" -> not a reserved word or an identifier
 }
 
 // function that maps reserved words
@@ -114,11 +126,12 @@ int main(int argc, char *argv[])
 {
     char *reservedWord[] = {"null", "begin", "call", "const", "do", "else", "end", "if", "odd", "procedure", "read", "then", "var", "while", "write"};
 
-    // make one for special symbol
+    char *specialSymbol[] = {'+', '-', '*', '/', '(', ')', '=', ',', '.', '#', '<', '>', '$', '%', ';'};
 
     // char *identifier[] = ""; //to store the identifier name (to check if length exceeds)
 
-    char *bufferLexeme;
+    char *bufferLexeme = malloc(strmax + 1);
+    
     // declare another buffer to determine: reserved word, special symbol, letter, digit, and identifier
     //(do lookup to check)
 
@@ -135,8 +148,8 @@ int main(int argc, char *argv[])
         printf("Source Program:\n");
 
         int i = 0;
-        // use buffers to check little by little if it is a reserved word, special character, or an identifier
 
+        // use buffer to check little by little if it is a reserved word, special character, or an identifier
         while (1)
         {
 
@@ -148,35 +161,41 @@ int main(int argc, char *argv[])
             }
 
             // check if ch is a letter
-            if (ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z')
+            if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'))
             {
+
                 bufferLexeme[i] = ch;
+                bufferLexeme[i + 1] = '\0';
 
-                // returns the string
-
-                char *word = reservedOrIdentifier(bufferLexeme, i, reservedWord);
-
-                printf("HERE IS THE WORD: %s ITERATION: %d", word, i);
+                char *word = reservedOrIdentifier(bufferLexeme, i, reservedWord, specialSymbol);
+                printf("Building the BUFFER: %s\n", bufferLexeme);
+                printf("HERE IS THE WORD: %s ITERATION: %d\n", word, i);
 
                 // pass the string to check for the token number, if string is not empty
+                // make a function that
+                if (word != "")
+                {
+                    bufferLexeme[0] = '\0';
+                    i = 0;
+                    // call the function to identify the token number
+
+                    continue;
+                }
+
+                if (strcmp(word, "Success") == 0)
+                {
+                    // returns identifier
+                }
+
+                else
+
+                {
+                    // could be a number, special character, escape sequence, or identifier
+                }
             }
 
-            /*else
-            {
-
-                //if ch is not a letter
-
-
-                //if ch is a special character
-
-
-            }*/
-
-            // check if ch is a special symbol
-
-            // check if ch is an escape sequence
-
-            putchar(ch);
+            // putchar(ch);
+            i++;
         }
 
         fclose(ip);
