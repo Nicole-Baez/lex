@@ -76,46 +76,40 @@ typedef enum
     2- Number too long
     3- Invalid symbols (idk how to check this)
 
+    Falta:
+    - el name table
+    - printear el lexeme, el name table, y el token list
+
 
 */
 
 // Check for reserved word or identifier
-char *reservedOrIdentifier(char buffer[], int bufferLength, char *reservedWord[], char specialSymbol[], char *nameTable[])
+char *reservedOrIdentifier(char buffer[], int bufferLength, char *reservedWord[], char *nameTable[])
 {
-    char *str = malloc(bufferLength + 1);
+
     int length;
-
-    for (length = 0; length < bufferLength; length++)
-    {
-        str[length] = buffer[length];
-    }
-
-    str[length] = '\0';
 
     for (int j = 0; j < norw; j++)
     {
-        if (strcmp(reservedWord[j], str) == 0)
+        if (strcmp(reservedWord[j], buffer) == 0)
         {
-            printf("RESERVED WORD WOW");
-            return str;
-        }
 
-        if (specialSymbol[j] == str[j])
-        {
-            // if not in name table
-            printf("Identifier!!");
-            // store in name table without the special symbol
-
-            return "Success";
+            return buffer;
         }
     }
 
-    return ""; // "" -> not a reserved word or an identifier
+    return "identifier"; // "" -> not a reserved word or an identifier
 }
 
 // function that maps reserved words
-TokenType mapReservedWord(char *str)
+TokenType mapReservedWordAndIdentifier(char *str)
 {
+
+    if (strcmp(str, "identifier") == 0)
+    {
+
+        return identsym;
+    }
 
     if (strcmp(str, "begin") == 0)
     {
@@ -196,6 +190,97 @@ TokenType mapReservedWord(char *str)
 }
 
 // function that maps special symbols
+TokenType mapSpecialSym(char *buff)
+{
+    if (strcmp(buff, "+") == 0)
+    {
+
+        return plussym;
+    }
+
+    if (strcmp(buff, "-") == 0)
+    {
+        return minussym;
+    }
+
+    if (strcmp(buff, "/") == 0)
+    {
+        return slashsym;
+    }
+
+    if (strcmp(buff, "*") == 0)
+    {
+        return multsym;
+    }
+
+    if (strcmp(buff, "(") == 0)
+    {
+        return lparentsym;
+    }
+
+    if (strcmp(buff, ")") == 0)
+    {
+        return rparentsym;
+    }
+
+    if (strcmp(buff, "=") == 0)
+    {
+        return eqsym;
+    }
+
+    if (strcmp(buff, ",") == 0)
+    {
+        return commasym;
+    }
+
+    if (strcmp(buff, ";") == 0)
+    {
+        return semicolonsym;
+    }
+
+    if (strcmp(buff, ".") == 0)
+    {
+        return periodsym;
+    }
+
+    if (strcmp(buff, "<") == 0)
+    {
+        return lessym;
+    }
+
+    if (strcmp(buff, ">") == 0)
+    {
+        return gtrsym;
+    }
+
+    if (strcmp(buff, "<=") == 0)
+    {
+        return leqsym;
+    }
+
+    if (strcmp(buff, ">=") == 0)
+    {
+        return geqsym;
+    }
+
+    if (strcmp(buff, "<>") == 0)
+    {
+        return neqsym;
+    }
+
+    if (strcmp(buff, ":=") == 0)
+    {
+        return becomessym;
+    }
+
+    // escape sequences
+    if (strcmp(buff, " ") == 0 || strcmp(buff, "\n") == 0 || strcmp(buff, "\t") == 0 || strcmp(buff, "\r") == 0)
+    {
+        return 0;
+    }
+
+    return skipsym; // invalid symbol
+}
 
 // function that checks for escape sequences
 
@@ -204,10 +289,6 @@ int main(int argc, char *argv[])
 {
     char *reservedWord[] = {"null", "begin", "call", "const", "do", "else", "end", "if", "odd", "procedure", "read", "then", "var", "while", "write"};
 
-    char specialSymbol[] = {'+', '-', '*', '/', '(', ')', '=', ',', '.', '#', '<', '>', '$', '%', ';'};
-
-    // char *identifier[] = ""; //to store the identifier name (to check if length exceeds)
-
     char *bufferLexeme = malloc(strmax + 1);
 
     // declare another buffer to determine: reserved word, special symbol, letter, digit, and identifier
@@ -215,7 +296,7 @@ int main(int argc, char *argv[])
 
     char *nameTable[] = {""}; // to store the name table
 
-    int *tokenList[] = {0}; // to store all the tokens
+    int tokenList[strmax + 1] = {0}; // to store all the tokens
 
     char ch; // to read each char
 
@@ -226,6 +307,7 @@ int main(int argc, char *argv[])
         printf("Source Program:\n");
 
         int i = 0;
+        int tokenCount = 0;
 
         // use buffer to check little by little if it is a reserved word, special character, or an identifier
         while (1)
@@ -233,50 +315,160 @@ int main(int argc, char *argv[])
 
             ch = fgetc(ip);
 
+            putchar(ch);
+
             if (ch == EOF)
             {
                 break;
             }
 
             // check if ch is a letter
-            if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'))
+            // problem: if an identifier has numbers it won't get in here
+            // put a while loop that checcks for letter and digit, THEN send it to the function
+            if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= 0 && ch <= 9))
             {
 
                 bufferLexeme[i] = ch;
+                // bufferLexeme[i + 1] = '\0';
+
+                while ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= 0 && ch <= 9))
+                {
+                    bufferLexeme[i] = ch;
+                    ch = fgetc(ip);
+                    i++;
+                }
+
                 bufferLexeme[i + 1] = '\0';
 
-                char *word = reservedOrIdentifier(bufferLexeme, i, reservedWord, specialSymbol, nameTable);
-                printf("Building the BUFFER: %s\n", bufferLexeme);
-                printf("HERE IS THE WORD: %s ITERATION: %d\n", word, i);
+                char *word = reservedOrIdentifier(bufferLexeme, i, reservedWord, nameTable);
 
                 // pass the string to check for the token number, if string is not empty
-                if (strcmp(word, "") != 0)
+                if (strcmp(word, "identifier") == 0 || (strcmp(word, " ") != 0)) //|| strcmp(word, "identifier") == 0
                 {
-                    bufferLexeme[0] = '\0';
-                    i = 0;
+
                     // call the function to identify the token number
-                    int token = mapReservedWord(word);
-                    printf("This is the token: %d\n", token);
+                    int token = mapReservedWordAndIdentifier(word);
 
-                    continue;
-                }
+                    tokenList[tokenCount] = token;
+                    tokenCount++;
 
-                if (strcmp(word, "Success") == 0)
-                {
-                    // returns identifier (already added to the name table), clear the buffer
+                    // clear the buffer
                     bufferLexeme[0] = '\0';
                     i = 0;
-                }
-
-                else
-
-                {
-                    // could be a number, special character, escape sequence, or identifier
                 }
             }
 
-            // putchar(ch);
-            i++;
+            if (ch >= '0' && ch <= '9')
+            {
+                i = 0;
+                bufferLexeme[i] = ch;
+
+                while (ch >= '0' && ch <= '9')
+                {
+                    bufferLexeme[i] = ch;
+                    ch = fgetc(ip);
+                    i++;
+                }
+
+                bufferLexeme[i + 1] = '\0';
+
+                int token = numbersym;
+                tokenList[tokenCount] = token;
+                tokenCount++;
+
+                bufferLexeme[0] = '\0';
+                i = 0;
+            }
+
+            if (!((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= 0 && ch <= 9)))
+            {
+
+                bufferLexeme[i] = ch;
+
+                if (ch == '<' || ch == '>' || ch == ':')
+                {
+
+                    ch = fgetc(ip);
+                    if (!((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= 0 && ch <= 9)))
+                    {
+
+                        bufferLexeme[i + 1] = ch;
+                    }
+
+                    bufferLexeme[i + 2] = '\0';
+
+                    // llamar mapsymbol, meter
+                    int token = mapSpecialSym(bufferLexeme);
+
+                    if (token != 0)
+                    {
+                        tokenList[tokenCount] = token;
+                        tokenCount++;
+
+                        // clear the buffer
+                        bufferLexeme[0] = '\0';
+                        i = 0;
+                        continue;
+                    }
+                }
+
+                if (ch == '/')
+                {
+                    ch = fgetc(ip);
+
+                    printf("CH: %c\n", ch);
+
+                    if (ch == '*')
+                    {
+                        // ignorar comentario
+
+                        while ((ch = fgetc(ip)) != '/')
+                        {
+                            continue;
+                        }
+                    }
+
+                    // llamar
+                    int token = mapSpecialSym(bufferLexeme);
+
+                    if (token != 0)
+                    {
+
+                        tokenList[tokenCount] = token;
+                        tokenCount++;
+
+                        // clear the buffer
+                        bufferLexeme[0] = '\0';
+                        i = 0;
+                        continue;
+                    }
+                }
+
+                else
+                {
+
+                    bufferLexeme[i + 1] = '\0';
+                    // lama mapsymbol
+
+                    int token = mapSpecialSym(bufferLexeme);
+
+                    if (token != 0)
+                    {
+                        tokenList[tokenCount] = token;
+                        tokenCount++;
+
+                        // clear the buffer
+                        bufferLexeme[0] = '\0';
+                        i = 0;
+                        continue;
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < tokenCount; i++)
+        {
+            printf("TOKEN #%d: %d\n", i + 1, tokenList[i]);
         }
 
         fclose(ip);
