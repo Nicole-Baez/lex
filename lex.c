@@ -187,6 +187,7 @@ int main(int argc, char *argv[])
                 }
 
                 else
+                
                 {
                     // could be a number, special character, escape sequence, or identifier
                 }
