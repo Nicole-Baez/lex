@@ -293,7 +293,7 @@ int main(int argc, char *argv[])
 
     // declare another buffer to determine: reserved word, special symbol, letter, digit, and identifier
     //(do lookup to check)
-
+    char *lexemes[] = {""};
     char *nameTable[] = {""}; // to store the name table
 
     int tokenList[strmax + 1] = {0}; // to store all the tokens
@@ -304,10 +304,11 @@ int main(int argc, char *argv[])
     {
         FILE *ip = fopen(argv[1], "r");
 
-        printf("Source Program:\n");
+        printf("Source Program:\n\n");
 
         int i = 0;
         int tokenCount = 0;
+        int lexLength = 0;
 
         // use buffer to check little by little if it is a reserved word, special character, or an identifier
         while (1)
@@ -315,12 +316,12 @@ int main(int argc, char *argv[])
 
             ch = fgetc(ip);
 
-            putchar(ch);
-
             if (ch == EOF)
             {
                 break;
             }
+
+            putchar(ch);
 
             // check if ch is a letter
             // problem: if an identifier has numbers it won't get in here
@@ -334,7 +335,9 @@ int main(int argc, char *argv[])
                 while ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= 0 && ch <= 9))
                 {
                     bufferLexeme[i] = ch;
+
                     ch = fgetc(ip);
+                    putchar(ch);
                     i++;
                 }
 
@@ -352,6 +355,10 @@ int main(int argc, char *argv[])
                     tokenList[tokenCount] = token;
                     tokenCount++;
 
+                    lexemes[lexLength] = word;
+                    lexLength++;
+
+                    printf("\nLEXEME: %s\n", lexemes[lexLength]);
                     // clear the buffer
                     bufferLexeme[0] = '\0';
                     i = 0;
@@ -367,6 +374,7 @@ int main(int argc, char *argv[])
                 {
                     bufferLexeme[i] = ch;
                     ch = fgetc(ip);
+                    putchar(ch);
                     i++;
                 }
 
@@ -375,6 +383,9 @@ int main(int argc, char *argv[])
                 int token = numbersym;
                 tokenList[tokenCount] = token;
                 tokenCount++;
+
+                lexemes[lexLength] = bufferLexeme;
+                lexLength++;
 
                 bufferLexeme[0] = '\0';
                 i = 0;
@@ -405,6 +416,9 @@ int main(int argc, char *argv[])
                         tokenList[tokenCount] = token;
                         tokenCount++;
 
+                        lexemes[lexLength] = bufferLexeme;
+                        lexLength++;
+
                         // clear the buffer
                         bufferLexeme[0] = '\0';
                         i = 0;
@@ -415,8 +429,7 @@ int main(int argc, char *argv[])
                 if (ch == '/')
                 {
                     ch = fgetc(ip);
-
-                    printf("CH: %c\n", ch);
+                    putchar(ch);
 
                     if (ch == '*')
                     {
@@ -436,6 +449,9 @@ int main(int argc, char *argv[])
 
                         tokenList[tokenCount] = token;
                         tokenCount++;
+
+                        lexemes[lexLength] = bufferLexeme;
+                        lexLength++;
 
                         // clear the buffer
                         bufferLexeme[0] = '\0';
@@ -457,6 +473,9 @@ int main(int argc, char *argv[])
                         tokenList[tokenCount] = token;
                         tokenCount++;
 
+                        lexemes[lexLength] = bufferLexeme;
+                        lexLength++;
+
                         // clear the buffer
                         bufferLexeme[0] = '\0';
                         i = 0;
@@ -466,10 +485,24 @@ int main(int argc, char *argv[])
             }
         }
 
+        printf("Lexeme Table:\n\n");
+        printf("lexeme\ttoken type\n");
+
+        for (int i = 0; i < lexLength; i++)
+        {
+            printf("LEXEMES: %s\n");
+            printf("%s\t%d", lexemes[i], tokenList[i]);
+        }
+
+        printf("\nToken List:\n\n");
+
         for (int i = 0; i < tokenCount; i++)
         {
-            printf("TOKEN #%d: %d\n", i + 1, tokenList[i]);
+
+            printf("%d ", tokenList[i]);
         }
+
+        printf("\n");
 
         fclose(ip);
     }
