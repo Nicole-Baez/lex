@@ -84,10 +84,11 @@ typedef enum
 */
 
 // Check for reserved word or identifier
-char *reservedOrIdentifier(char buffer[], int bufferLength, char *reservedWord[], char *nameTable[])
+char *reservedOrIdentifier(char buffer[], char *reservedWord[], char *nameTable[], int nameTableLength)
 {
 
     int length;
+    int found = 0;
 
     for (int j = 0; j < norw; j++)
     {
@@ -293,8 +294,8 @@ int main(int argc, char *argv[])
 
     // declare another buffer to determine: reserved word, special symbol, letter, digit, and identifier
     //(do lookup to check)
-    char *lexemes[] = {""};
-    char *nameTable[] = {""}; // to store the name table
+    char *lexemes[strmax + 1] = {""};
+    char *nameTable[strmax + 1] = {""}; // to store the name table
 
     int tokenList[strmax + 1] = {0}; // to store all the tokens
 
@@ -309,6 +310,7 @@ int main(int argc, char *argv[])
         int i = 0;
         int tokenCount = 0;
         int lexLength = 0;
+        int nameTableLength = 1;
 
         // use buffer to check little by little if it is a reserved word, special character, or an identifier
         while (1)
@@ -343,7 +345,7 @@ int main(int argc, char *argv[])
 
                 bufferLexeme[i + 1] = '\0';
 
-                char *word = reservedOrIdentifier(bufferLexeme, i, reservedWord, nameTable);
+                char *word = reservedOrIdentifier(bufferLexeme, reservedWord, nameTable, nameTableLength);
 
                 // pass the string to check for the token number, if string is not empty
                 if (strcmp(word, "identifier") == 0 || (strcmp(word, " ") != 0)) //|| strcmp(word, "identifier") == 0
@@ -355,10 +357,10 @@ int main(int argc, char *argv[])
                     tokenList[tokenCount] = token;
                     tokenCount++;
 
-                    lexemes[lexLength] = word;
+                    lexemes[lexLength] = malloc(strlen(word) + 1);
+                    strcpy(lexemes[lexLength], word);
                     lexLength++;
 
-                    printf("\nLEXEME: %s\n", lexemes[lexLength]);
                     // clear the buffer
                     bufferLexeme[0] = '\0';
                     i = 0;
@@ -384,7 +386,8 @@ int main(int argc, char *argv[])
                 tokenList[tokenCount] = token;
                 tokenCount++;
 
-                lexemes[lexLength] = bufferLexeme;
+                lexemes[lexLength] = malloc(strlen(bufferLexeme) + 1);
+                strcpy(lexemes[lexLength], bufferLexeme);
                 lexLength++;
 
                 bufferLexeme[0] = '\0';
@@ -408,7 +411,6 @@ int main(int argc, char *argv[])
 
                     bufferLexeme[i + 2] = '\0';
 
-                    // llamar mapsymbol, meter
                     int token = mapSpecialSym(bufferLexeme);
 
                     if (token != 0)
@@ -416,7 +418,8 @@ int main(int argc, char *argv[])
                         tokenList[tokenCount] = token;
                         tokenCount++;
 
-                        lexemes[lexLength] = bufferLexeme;
+                        lexemes[lexLength] = malloc(strlen(bufferLexeme) + 1);
+                        strcpy(lexemes[lexLength], bufferLexeme);
                         lexLength++;
 
                         // clear the buffer
@@ -450,7 +453,8 @@ int main(int argc, char *argv[])
                         tokenList[tokenCount] = token;
                         tokenCount++;
 
-                        lexemes[lexLength] = bufferLexeme;
+                        lexemes[lexLength] = malloc(strlen(bufferLexeme) + 1);
+                        strcpy(lexemes[lexLength], bufferLexeme);
                         lexLength++;
 
                         // clear the buffer
@@ -473,7 +477,8 @@ int main(int argc, char *argv[])
                         tokenList[tokenCount] = token;
                         tokenCount++;
 
-                        lexemes[lexLength] = bufferLexeme;
+                        lexemes[lexLength] = malloc(strlen(bufferLexeme) + 1);
+                        strcpy(lexemes[lexLength], bufferLexeme);
                         lexLength++;
 
                         // clear the buffer
@@ -485,13 +490,15 @@ int main(int argc, char *argv[])
             }
         }
 
+        printf("\n");
+
         printf("Lexeme Table:\n\n");
-        printf("lexeme\ttoken type\n");
+        printf("lexeme\t\ttoken type\n");
 
         for (int i = 0; i < lexLength; i++)
         {
-            printf("LEXEMES: %s\n");
-            printf("%s\t%d", lexemes[i], tokenList[i]);
+
+            printf("%s\t%d\n", lexemes[i], tokenList[i]);
         }
 
         printf("\nToken List:\n\n");
