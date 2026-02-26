@@ -146,9 +146,51 @@ I had to use DMA for both the buffer and the string.
 
 #### Round 2
 
-**Prompt:** I want my buffer to reset after a reserved word has been found, how could I do that?
-**AI Output:** [Summarize or paste the output]
-**Verification/Edits:** [How you verified accuracy or modified the output]
+**Prompt:** 
+
+This condition in my code is not correctly adding the lexeme into my lexeme array. 
+
+if (strcmp(word, "identifier") == 0 || (strcmp(word, " ") != 0)) //|| strcmp(word, "identifier") == 0
+                {
+
+                    // call the function to identify the token number
+                    int token = mapReservedWordAndIdentifier(word);
+
+                    tokenList[tokenCount] = token;
+                    tokenCount++;
+
+                    lexemes[lexLength] = word;
+                    lexLength++;
+
+                    // clear the buffer
+                    bufferLexeme[0] = '\0';
+                    i = 0;
+                }
+**AI Output:** 
+
+The condition on your if statement is the problem. Let's break it down:
+cstrcmp(word, "identifier") == 0 || (strcmp(word, " ") != 0)
+The second part of the OR — strcmp(word, " ") != 0 — is true for almost every string that isn't a single space. This means the entire condition is nearly always true, so it runs even when it shouldn't.
+It looks like your intent is to add the lexeme only when the word is an identifier or when it's not whitespace/empty. The fix depends on your exact logic, but most likely you want AND instead of OR for part of the condition, or you want to check for an empty/whitespace string differently:
+c// Option 1: Only add if word is not a space and not empty
+if (strcmp(word, " ") != 0 && strcmp(word, "") != 0)
+
+// Option 2: Only add if word is "identifier" OR word is a non-space token
+if (strcmp(word, "identifier") == 0 || strcmp(word, " ") != 0 && strlen(word) > 0)
+
+// Option 3: Most common fix — check it's not whitespace/empty at all
+if (strlen(word) > 0 && strcmp(word, " ") != 0)
+A few other things worth checking in the broader code:
+String storage issue — This is likely a bigger bug. If word is a pointer to a buffer (like bufferLexeme), then doing lexemes[lexLength] = word just copies the pointer, not the string. Since you clear the buffer afterward with bufferLexeme[0] = '\0', all your lexeme entries will point to the same (now-empty) memory. Fix it with strdup:
+clexemes[lexLength] = strdup(word);
+Or if lexemes is a 2D char array:
+cstrcpy(lexemes[lexLength], word);
+Index reset — You reset i = 0 but if i is your buffer index, make sure that's consistent with how you're building bufferLexeme elsewhere.
+
+
+**Verification/Edits:** I tried doing strcpy but it was giving me an error. Then I followed up with Claude and
+I realized that not allocating memory for each pointer in the lexeme char array could be one of the issues. 
+Once I allocated memory the lexemes started appearing in the terminal. 
 
 #### Round 3 (optional)
 
