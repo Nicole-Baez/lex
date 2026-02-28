@@ -122,7 +122,8 @@ February 24th, 2026
 
 ### Specific Parts of Assignment
 
-I used Claude to debug compilation error messages.
+I used Claude to debug compilation error messages. I also used Claude for help on storing and printing
+identifier indexes from the name table.
 
 ### Conversation Log
 
@@ -140,7 +141,7 @@ The issue is that reservedWord is likely already an array of strings (i.e., char
 strcmp expects two const char _ arguments, so just remove the &:
 cif (strcmp(reservedWord[j], str) == 0)
 That gives strcmp the actual string (a char _) rather than a pointer to it.
-**Verification/Edits:\*\* I will now remove the & symbol, which I only added because the
+**Verification/Edits:** I will now remove the & symbol, which I only added because the
 terminal error said to do so earlier. After removing the symbol the code worked and now the buffer is visible.
 I had to use DMA for both the buffer and the string.
 
@@ -194,9 +195,320 @@ Once I allocated memory the lexemes started appearing in the terminal.
 
 #### Round 3 (optional)
 
-**Prompt:** [Exact prompt/question]
+**Prompt:** 
+    int length;
+    int found = 0;
+
+    for (int j = 0; j < norw; j++)
+    {
+        if (strcmp(reservedWord[j], buffer) == 0)
+        {
+
+            return buffer;
+        }
+    }
+
+    for (int i = 0; i < nameTableLength; i++)
+    {
+        // if it is in the name table, break
+        if (strcmp(nameTable[nameTableLength], buffer) == 0)
+        {
+            found = 1;
+            break;
+        }
+    }
+
+    if (!found)
+    {
+        // if it is not in the name table then add it
+        nameTable[nameTableLength] = malloc(bufferLength + 1);
+        nameTable[nameTableLength] = buffer;
+
+        strcpy(nameTable[nameTableLength], buffer);
+        nameTableLength++;
+    }
+
+    return buffer; 
+
+For this function, I add the identifier to the name table and I return the buffer, when I receive it in main this is how I have it set up 
+
+if ((strcmp(word, " ") != 0)) //|| strcmp(word, "identifier") == 0
+                {
+
+                    // call the function to identify the token number
+                    int token = mapReservedWordAndIdentifier(word);
+
+                    tokenList[tokenCount] = token;
+                    tokenCount++;
+
+                    
+
+                    lexemes[lexLength] = malloc(strlen(word) + 1);
+                    strcpy(lexemes[lexLength], word);
+                    lexLength++;
+
+                    // clear the buffer
+                    bufferLexeme[0] = '\0';
+                    i = 0;
+                }
+            }
+
+I need to distinguish the identifier from the reserved word and print the specific index of the identifier that's stored in the name table, how can I modify main to make this distinction possible?
 **AI Output:** [Summarize or paste the output]
 **Verification/Edits:** [How you verified accuracy or modified the output]
+
+
+#### Round 4 (optional)
+
+**Prompt:**
+int length;
+    int found = 0;
+
+    for (int j = 0; j < norw; j++)
+    {
+        if (strcmp(reservedWord[j], buffer) == 0)
+        {
+
+            return mapReservedWordAndIdentifier(buffer);
+        }
+    }
+
+    for (int i = 0; i < nameTableLength; i++)
+    {
+        // if it is in the name table, break
+        if (strcmp(nameTable[nameTableLength], buffer) == 0)
+        {
+            found = i;
+            break;
+        }
+    }
+
+    if (!found)
+    {
+        // if it is not in the name table then add it
+        nameTable[nameTableLength] = malloc(bufferLength + 1);
+        nameTable[nameTableLength] = buffer;
+
+        strcpy(nameTable[nameTableLength], buffer);
+        nameTableLength++;
+    }
+
+    idenIndex = &found;
+
+    return identsym;
+This is how I modified the function. 
+
+ int identifierIndex = 0;
+
+                int token = reservedOrIdentifier(bufferLexeme, i, reservedWord, nameTable, nameTableLength, &identifierIndex);
+
+                tokenList[tokenCount] = token;
+                tokenList[tokenCount++] = identifierIndex;
+
+                tokenCount++;
+
+                lexemes[lexLength] = malloc(strlen(bufferLexeme) + 1);
+                strcpy(lexemes[lexLength], bufferLexeme);
+                lexLength++;
+
+                // clear the buffer
+                bufferLexeme[0] = '\0';
+                i = 0;
+This is how it's received in main.
+
+for (int i = 0; i < lexLength; i++)
+        {
+
+            printf("%s\t%d\n", lexemes[i], tokenList[i]);
+        }
+
+        printf("\nToken List:\n\n");
+
+        for (int i = 0; i < tokenCount; i++)
+        {
+
+            printf("%d ", tokenList[i]);
+        }
+This is how I'm printing. lexeme          token type
+var     0
+x       0
+,       0
+y       0
+;       31
+begin   0
+y       0
+:=      32
+3       0
+;       0
+x       0
+:=      0
+y       34
+-       3
+56      32
+;       0
+end     0
+.       34 
+(And this is the output I'm getting, where are the zeros coming from and how do I fix it?)
+**AI Output:** 
+10:11 AMYou have several bugs compounding each other. Let me walk through them:
+Bug 1: Recursive call instead of token lookup
+c// Wrong - this calls itself recursively forever
+return mapReservedWordAndIdentifier(buffer);
+
+// Should return the token number for that reserved word
+return reservedWordTokens[j]; // or however you map words to token numbers
+Bug 2: Overwriting tokenList slot and double-incrementing tokenCount
+ctokenList[tokenCount] = token;
+tokenList[tokenCount++] = identifierIndex; // overwrites the token you just stored!
+tokenCount++;                               // double increment
+This should be:
+ctokenList[tokenCount] = token;
+identifierIndices[tokenCount] = identifierIndex;
+tokenCount++;
+Bug 3: Same index bug from before in your loop
+cif (strcmp(nameTable[nameTableLength], buffer) == 0) // always checks out-of-bounds slot
+// should be
+if (strcmp(nameTable[i], buffer) == 0)
+Bug 4: found initialized to 0, so index 0 looks like "not found"
+cint found = 0;   // 0 is a valid name table index!
+// ...
+if (!found)      // triggers even when found at index 0
+Change it to:
+cint found = -1;
+// ...
+if (found == -1)
+Bug 5: idenIndex = &found stores address of a local variable
+found dies when the function returns, so that pointer becomes dangling. Use the pointer parameter instead:
+c*identifierIndex = found; // write through the pointer passed in from main
+With all fixes applied your function should look like:
+cint found = -1;
+
+for (int j = 0; j < norw; j++)
+{
+    if (strcmp(reservedWord[j], buffer) == 0)
+    {
+        *identifierIndex = -1;
+        return reservedWordTokens[j];
+    }
+}
+
+for (int i = 0; i < nameTableLength; i++)
+{
+    if (strcmp(nameTable[i], buffer) == 0)
+    {
+        found = i;
+        break;
+    }
+}
+
+if (found == -1)
+{
+    nameTable[nameTableLength] = malloc(bufferLength + 1);
+    strcpy(nameTable[nameTableLength], buffer);
+    found = nameTableLength;
+    nameTableLength++;
+}
+
+*identifierIndex = found;
+return identsym;
+And in main:
+cint identifierIndex = -1;
+int token = reservedOrIdentifier(bufferLexeme, i, reservedWord, nameTable, nameTableLength, &identifierIndex);
+
+tokenList[tokenCount] = token;
+identifierIndices[tokenCount] = identifierIndex;
+tokenCount++;i want to identifier index to the token list though10:16 AMThen just append it as a second entry right after the token:
+cint identifierIndex = -1;
+int token = reservedOrIdentifier(bufferLexeme, i, reservedWord, nameTable, nameTableLength, &identifierIndex);
+
+tokenList[tokenCount++] = token;
+
+if (identifierIndex != -1)
+{
+    tokenList[tokenCount++] = identifierIndex;
+}
+This way reserved words only add one entry to the token list, and identifiers add two (the token code followed by its name table index). Then when printing you need to account for that:
+cfor (int i = 0; i < tokenCount; i++)
+{
+    if (tokenList[i] == identsym)
+    {
+        printf("%d %d ", tokenList[i], tokenList[i + 1]);
+        i++; // skip the index entry since we already printed it
+    }
+    else
+    {
+        printf("%d ", tokenList[i]);
+    }
+}
+**Verification/Edits:** I fixed the way I was adding the identifier to the tokenList. Instead of using an 
+array to store the identifier index, I decided to store it in the token list since I will have to print the 
+indexes in the order they're added to the tokenList. 
+
+#### Round 5 (optional)
+
+**Prompt:** I forgot to update found to nameTable, now I'm getting this output. It seems that the way I'm printing the token type is truncating my special symbols. Source Program:
+var x , y ;
+begin
+y : 3;
+x : y - 56;
+end .
+Lexeme Table:
+lexeme          token type
+var             14
+x               0
+,               2
+y               2
+;               31
+begin           2
+y               2
+:=              32
+3               4
+;               0
+x               2
+:=              2
+y               34
+-               3
+56              32
+;               2
+end             2
+.               34
+Token List:
+14 0 2 2 31 2 2 32 4 0 2 2 34 3 32 2 2 34 2 2 20 3 32 5 0 33
+**AI Output:** The token type column is showing the identifier index instead of the actual token code for identifiers. Your lexeme table print loop uses tokenList[i] for every entry, but since identifiers now store two entries (token code + index), the index is what lines up with some lexemes.
+You need to track a separate index for walking the token list while printing the lexeme table:
+cint t = 0; // separate token list walker
+for (int i = 0; i < lexLength; i++)
+{
+    printf("%s\t\t%d\n", lexemes[i], tokenList[t]);
+    
+    if (tokenList[t] == identsym)
+    {
+        t += 2; // skip both the token code and the name table index
+    }
+    else
+    {
+        t++;
+    }
+}
+And your token list print should already be correct since it just dumps every entry. But if you want the token list to look cleaner and show the index only for identifiers, it should be doing the same thing:
+cfor (int i = 0; i < tokenCount; i++)
+{
+    if (tokenList[i] == identsym)
+    {
+        printf("%d %d ", tokenList[i], tokenList[i + 1]);
+        i++;
+    }
+    else
+    {
+        printf("%d ", tokenList[i]);
+    }
+}
+The root issue is that your lexeme array and token list are no longer 1-to-1 once identifiers take two slots, so you can't use the same index i for both.
+**Verification/Edits:** I implemented an additional tracker for the tokenList to match with the lexeme array. This
+approach worked though I was still having issues with the printing due to logical errors in my reservedOrIdentifier
+function. 
+
+
 
 ### Learning & Reflection
 
