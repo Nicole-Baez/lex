@@ -590,7 +590,7 @@ int main(int argc, char *argv[])
         printf("lexeme\t\ttoken type\n");
 
         int token = 0; // to keep track of the tokens (it has to skip the identifier index)
-
+        int errorPrintIndex = 0;
         for (int i = 0; i < lexLength; i++)
         {
 
@@ -598,8 +598,8 @@ int main(int argc, char *argv[])
             printf("%s\t\t", lexemes[i]);
             if (tokenList[token] == skipsym)
             {
-                printf("%s\n", errorCollect[errorMesNum]); // print error message
-                errorMesNum++;
+                printf("%s\n", errorCollect[errorPrintIndex]); // print error message
+                errorPrintIndex++;
             }
             else
             {
