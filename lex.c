@@ -398,23 +398,27 @@ int main(int argc, char *argv[])
                 {
                     if (strlen(bufferLexeme) > 11)
                     {
-                        // If identifier exceeds 11 characters, skipsym is stored in the token list
+                        // It's an identifier but too long — remove it from name table
+                        free(nameTable[nameTableLength - 1]);
+                        nameTable[nameTableLength - 1] = NULL;
+                        nameTableLength--;
+
+                        // Add error and skipsym
+                        errorCollect[errorMesNum] = errorMessages[0]; // "Identifier too long"
+                        errorMesNum++;
+
                         tokenList[tokenCount] = skipsym;
                         tokenCount++;
                     }
-
                     else
                     {
-                        // Token is added to the token list
-                        tokenList[tokenCount] = skipsym;
+                        tokenList[tokenCount] = identsym;
                         tokenCount++;
 
-                        // If identifierIndex is not -1, this means an identifier was found and added to the name table
                         if (identifierIndex != -1)
                         {
-                            // Name table index is added to the token list
                             tokenList[tokenCount] = identifierIndex;
-                            tokenCount++; // Token list tracker is updated
+                            tokenCount++;
                         }
                     }
                 }
@@ -422,7 +426,7 @@ int main(int argc, char *argv[])
                 else
                 {
                     // Token (reserved word) is added to the token list
-                    tokenList[tokenCount] = skipsym;
+                    tokenList[tokenCount] = token;
                     tokenCount++;
                 }
 
@@ -458,13 +462,17 @@ int main(int argc, char *argv[])
 
                 if (strlen(bufferLexeme) > 5)
                 {
+                    // Add error and skipsym
+                    errorCollect[errorMesNum] = errorMessages[1]; // "Number too long"
+                    errorMesNum++;
+
                     tokenList[tokenCount] = skipsym;
                     tokenCount++;
                 }
 
                 else
                 {
-                    tokenList[tokenCount] = token;
+                    tokenList[tokenCount] = numbersym;
                     tokenCount++;
 
                     tokenList[tokenCount] = atoi(bufferLexeme);
@@ -586,20 +594,22 @@ int main(int argc, char *argv[])
         for (int i = 0; i < lexLength; i++)
         {
 
-            if (tokenList[token] != skipsym)
+            // printf("%s\t\t%d\n", lexemes[i], tokenList[token]);
+            printf("%s\t\t", lexemes[i]);
+            if (tokenList[token] == skipsym)
             {
-                printf("%s\t\t%d\n", lexemes[i], tokenList[token]);
+                printf("%s\n", errorCollect[errorMesNum]); // print error message
+                errorMesNum++;
             }
-
             else
             {
+                printf("%d\n", tokenList[token]);
             }
 
             if (tokenList[token] == identsym || tokenList[token] == numbersym)
             {
                 token += 2;
             }
-
             else
             {
                 token++;
