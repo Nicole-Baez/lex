@@ -396,33 +396,30 @@ int main(int argc, char *argv[])
 
                 if (token == identsym)
                 {
-                    if (strlen(bufferLexeme) > 11)
+                    /*if (strlen(bufferLexeme) > 11)
                     {
                         // If identifier exceeds 11 characters, skipsym is stored in the token list
                         tokenList[tokenCount] = skipsym;
                         tokenCount++;
-                    }
+                    }*/
 
-                    else
+                    // Token is added to the token list
+                    tokenList[tokenCount] = identsym;
+                    tokenCount++;
+
+                    // If identifierIndex is not -1, this means an identifier was found and added to the name table
+                    if (identifierIndex != -1)
                     {
-                        // Token is added to the token list
-                        tokenList[tokenCount] = skipsym;
-                        tokenCount++;
-
-                        // If identifierIndex is not -1, this means an identifier was found and added to the name table
-                        if (identifierIndex != -1)
-                        {
-                            // Name table index is added to the token list
-                            tokenList[tokenCount] = identifierIndex;
-                            tokenCount++; // Token list tracker is updated
-                        }
+                        // Name table index is added to the token list
+                        tokenList[tokenCount] = identifierIndex;
+                        tokenCount++; // Token list tracker is updated
                     }
                 }
 
                 else
                 {
                     // Token (reserved word) is added to the token list
-                    tokenList[tokenCount] = skipsym;
+                    tokenList[tokenCount] = token;
                     tokenCount++;
                 }
 
@@ -586,14 +583,7 @@ int main(int argc, char *argv[])
         for (int i = 0; i < lexLength; i++)
         {
 
-            if (tokenList[token] != skipsym)
-            {
-                printf("%s\t\t%d\n", lexemes[i], tokenList[token]);
-            }
-
-            else
-            {
-            }
+            printf("%s\t\t%d\n", lexemes[i], tokenList[token]);
 
             if (tokenList[token] == identsym || tokenList[token] == numbersym)
             {
