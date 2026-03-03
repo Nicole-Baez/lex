@@ -69,19 +69,6 @@ typedef enum
 #define idenmax 11 // identifier length
 #define strmax 256 // str max length
 
-/*
-    Error messages:
-    1- Identifier too long
-    2- Number too long
-    3- Invalid symbols (idk how to check this)
-
-    Falta:
-    - el name table
-    - printear el lexeme, el name table, y el token list
-
-
-*/
-
 // This function maps the reserved word
 TokenType mapReservedWordAndIdentifier(char *str)
 {
@@ -161,7 +148,7 @@ TokenType mapReservedWordAndIdentifier(char *str)
         return elsesym;
     }
 
-    return 0; // it is not a reserved word
+    return 0; // It is not a reserved word
 }
 
 // This function maps the special symbols and alsp detects escape sequences
@@ -287,21 +274,22 @@ TokenType reservedOrIdentifier(char buffer[], int bufferLength, char *reservedWo
 
     if (found == -1)
     {
-        // if it is not in the name table then add it
+        // If it is not in the name table then add it
         nameTable[*nameTableLength] = malloc(bufferLength + 1);
 
         strcpy(nameTable[*nameTableLength], buffer);
-        found = *nameTableLength;
+        found = *nameTableLength; // Found is updated
         (*nameTableLength)++;
     }
 
+    // Stores the identifier index from the name table
     *idenIndex = found;
 
+    // Returns the identifier token number
     return identsym;
 }
 
-// function that checks for escape sequences
-
+// Function that checks for escape sequences
 int main(int argc, char *argv[])
 
 {
@@ -322,6 +310,7 @@ int main(int argc, char *argv[])
 
     // Array for collecting error messages
     char *errorCollect[] = {""};
+
     // Array to store the token list
     int tokenList[strmax + 1] = {0}; // to store all the tokens
 
@@ -360,21 +349,17 @@ int main(int argc, char *argv[])
             putchar(ch);
 
             // Checks if char is a letter or a number
-            if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= 0 && ch <= 9))
+            if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'))
             {
-
-                // If it is, it's added to the buffer
-                bufferLexeme[i] = ch;
-
+                i = 0;
                 /*
                  If the rest of the characters being read are also letters or numbers it can potentially
                  be a reserved word or an identifier
                 */
-                while ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= 0 && ch <= 9))
+                while ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9'))
                 {
                     // Chars are added to the buffer until a non letter and non number character is reached
                     bufferLexeme[i] = ch;
-
                     // Moves along the ip pointer and gathers the character
                     ch = fgetc(ip);
 
@@ -386,7 +371,10 @@ int main(int argc, char *argv[])
                 }
 
                 // Null terminator is added at the end
-                bufferLexeme[i + 1] = '\0';
+                bufferLexeme[i] = '\0';
+
+                // If the character is neither a letter or a char, it the pointer skips it
+                ungetc(ch, ip);
 
                 // Identifier index variable is declared (it will be sent as a pointer so that it can be updated without it needing to be returned)
                 int identifierIndex = -1;
@@ -394,25 +382,36 @@ int main(int argc, char *argv[])
                 // Function is called to detect a reserved word or an identifier
                 int token = reservedOrIdentifier(bufferLexeme, i, reservedWord, nameTable, &nameTableLength, &identifierIndex);
 
+                // If the identifier token is return
                 if (token == identsym)
                 {
-                    /*if (strlen(bufferLexeme) > 11)
+                    // If the length of the identifier exceeds 11 characters
+                    if (strlen(bufferLexeme) > 11)
                     {
-                        // If identifier exceeds 11 characters, skipsym is stored in the token list
+                        // If the identifier is too long, it's removed from the name table
+                        free(nameTable[nameTableLength - 1]);
+                        nameTable[nameTableLength - 1] = NULL;
+                        nameTableLength--; // Name table index is decreased
+
+                        // Add error and skipsym
+                        errorCollect[errorMesNum] = errorMessages[0]; // "Identifier too long"
+                        errorMesNum++;
+
                         tokenList[tokenCount] = skipsym;
                         tokenCount++;
-                    }*/
-
-                    // Token is added to the token list
-                    tokenList[tokenCount] = identsym;
-                    tokenCount++;
-
-                    // If identifierIndex is not -1, this means an identifier was found and added to the name table
-                    if (identifierIndex != -1)
+                    }
+                    else
                     {
-                        // Name table index is added to the token list
-                        tokenList[tokenCount] = identifierIndex;
-                        tokenCount++; // Token list tracker is updated
+                        // If it is a valid identifier length, it gets added to the token list
+                        tokenList[tokenCount] = identsym;
+                        tokenCount++;
+
+                        // If it is not an identifier it also gets added
+                        if (identifierIndex != -1)
+                        {
+                            tokenList[tokenCount] = identifierIndex;
+                            tokenCount++;
+                        }
                     }
                 }
 
@@ -441,6 +440,7 @@ int main(int argc, char *argv[])
                 i = 0;
                 bufferLexeme[i] = ch;
 
+                // Checks if the next character is also a number
                 while (ch >= '0' && ch <= '9')
                 {
                     bufferLexeme[i] = ch;
@@ -449,121 +449,172 @@ int main(int argc, char *argv[])
                     i++;
                 }
 
+                // Null Terminator
                 bufferLexeme[i + 1] = '\0';
 
                 int token = numbersym;
 
+                // If the number is longer than 5 digits
                 if (strlen(bufferLexeme) > 5)
                 {
+                    // Collect error message
+                    errorCollect[errorMesNum] = errorMessages[1]; // "Number too long"
+                    errorMesNum++;
+
+                    // Add skipsym to the token list
                     tokenList[tokenCount] = skipsym;
                     tokenCount++;
-                }
 
-                else
-                {
-                    tokenList[tokenCount] = token;
-                    tokenCount++;
-
-                    tokenList[tokenCount] = atoi(bufferLexeme);
-                    tokenCount++;
-
+                    // Add the lexeme to the lexeme array
                     lexemes[lexLength] = malloc(strlen(bufferLexeme) + 1);
                     strcpy(lexemes[lexLength], bufferLexeme);
                     lexLength++;
                 }
 
+                else
+                {
+                    // If the number is valid the token is added
+                    tokenList[tokenCount] = numbersym;
+                    tokenCount++;
+
+                    // The numerical representation of the number is also added to the token list
+                    tokenList[tokenCount] = atoi(bufferLexeme);
+                    tokenCount++;
+
+                    // Lexeme is added to the lexeme array
+                    lexemes[lexLength] = malloc(strlen(bufferLexeme) + 1);
+                    strcpy(lexemes[lexLength], bufferLexeme);
+                    lexLength++;
+                }
+
+                // Buffer is cleared
                 bufferLexeme[0] = '\0';
                 i = 0;
             }
 
-            if (!((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= 0 && ch <= 9)))
+            // If it is not a letter or a number, it could be a special symbol
+            if (!((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')))
             {
 
                 bufferLexeme[i] = ch;
 
+                // If the char is any of these three, it could be a <=, >=, or a :=
                 if (ch == '<' || ch == '>' || ch == ':')
                 {
 
                     ch = fgetc(ip);
-                    if (!((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= 0 && ch <= 9)))
+
+                    // Cheks if the next character is also a special symbol
+                    if (!((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')))
                     {
 
                         bufferLexeme[i + 1] = ch;
                     }
 
+                    // Null terminator
                     bufferLexeme[i + 2] = '\0';
 
                     int token = mapSpecialSym(bufferLexeme);
 
+                    // If the token is not an escape sequence
                     if (token != 0)
                     {
+                        // Token is added
                         tokenList[tokenCount] = token;
                         tokenCount++;
 
+                        // Lexeme is added to the lexeme array
                         lexemes[lexLength] = malloc(strlen(bufferLexeme) + 1);
                         strcpy(lexemes[lexLength], bufferLexeme);
                         lexLength++;
 
-                        // clear the buffer
+                        // If it is an invalid symbol, token is collected
+                        if (token == skipsym)
+                        {
+                            errorCollect[errorMesNum] = errorMessages[2]; // "Invalid Symbol"
+                            errorMesNum++;
+                        }
+
+                        // Clear the buffer
                         bufferLexeme[0] = '\0';
                         i = 0;
                         continue;
                     }
                 }
 
+                // If the character is / it could either be division or a comment
                 if (ch == '/')
                 {
                     ch = fgetc(ip);
                     putchar(ch);
 
+                    // Checks if it is a comment
                     if (ch == '*')
                     {
-                        // ignorar comentario
 
+                        // Ignores everything inside the comment
                         while ((ch = fgetc(ip)) != '/')
                         {
                             continue;
                         }
                     }
 
-                    // llamar
                     int token = mapSpecialSym(bufferLexeme);
 
+                    // If the token is not an escape sequence
                     if (token != 0)
                     {
-
+                        // Token is added to the token array
                         tokenList[tokenCount] = token;
                         tokenCount++;
 
+                        // If the token is a skipsym, error message is collected
+                        if (token == skipsym)
+                        {
+                            errorCollect[errorMesNum] = errorMessages[2]; // "Invalid Symbol"
+                            errorMesNum++;
+                        }
+
+                        // Lexeme is added to the lexeme array
                         lexemes[lexLength] = malloc(strlen(bufferLexeme) + 1);
                         strcpy(lexemes[lexLength], bufferLexeme);
                         lexLength++;
 
-                        // clear the buffer
+                        // Clear the buffer
                         bufferLexeme[0] = '\0';
                         i = 0;
                         continue;
                     }
                 }
 
+                // If it is a valid special symbol
                 else
                 {
-
+                    // Null terminator
                     bufferLexeme[i + 1] = '\0';
-                    // lama mapsymbol
 
                     int token = mapSpecialSym(bufferLexeme);
 
+                    // If token is not an escape sequence
                     if (token != 0)
                     {
+                        // Token is added to the token list
                         tokenList[tokenCount] = token;
                         tokenCount++;
 
+                        // If the token is a skipsym, error message is added
+                        if (token == skipsym)
+                        {
+                            errorCollect[errorMesNum] = errorMessages[2]; // "Invalid Symbol"
+                            errorMesNum++;
+                        }
+
+                        // Copies lexeme to the lexeme array
                         lexemes[lexLength] = malloc(strlen(bufferLexeme) + 1);
                         strcpy(lexemes[lexLength], bufferLexeme);
                         lexLength++;
 
-                        // clear the buffer
+                        // Clear the buffer
                         bufferLexeme[0] = '\0';
                         i = 0;
                         continue;
@@ -578,24 +629,40 @@ int main(int argc, char *argv[])
         printf("Lexeme Table:\n\n");
         printf("lexeme\t\ttoken type\n");
 
-        int token = 0; // to keep track of the tokens (it has to skip the identifier index)
-
+        int token = 0;           // To keep track of the tokens (it has to skip the identifier index)
+        int errorPrintIndex = 0; // To keep track of the error messages
         for (int i = 0; i < lexLength; i++)
         {
 
-            printf("%s\t\t%d\n", lexemes[i], tokenList[token]);
+            // Prints the lexeme
+            printf("%s\t\t", lexemes[i]);
 
+            // Checks for an error by checking for skipsym
+            if (tokenList[token] == skipsym)
+            {
+                printf("%s\n", errorCollect[errorPrintIndex]); // Prints error message
+                errorPrintIndex++;
+            }
+            else
+            {
+                // If not an error, print the token number
+                printf("%d\n", tokenList[token]);
+            }
+
+            // If the token just printed was an identifier or a number, token is increased by 2
             if (tokenList[token] == identsym || tokenList[token] == numbersym)
             {
                 token += 2;
             }
 
+            // Else it's increased by 1
             else
             {
                 token++;
             }
         }
 
+        // Prints the name table
         printf("\nName Table:\n\n");
         printf("Index Name\n");
         for (int i = 0; i < nameTableLength; i++)
@@ -603,10 +670,12 @@ int main(int argc, char *argv[])
             printf("%d\t%s\n", i, nameTable[i]);
         }
 
+        // Prints the token list
         printf("\nToken List:\n\n");
 
         for (int i = 0; i < tokenCount; i++)
         {
+            // If the token is an identifier or a number, it also prints the subsequent index or number
             if (tokenList[token] == identsym || tokenList[token] == numbersym)
             {
                 printf("%d %d ", tokenList[i], tokenList[i + 1]);
@@ -621,6 +690,7 @@ int main(int argc, char *argv[])
 
         printf("\n");
 
+        // File pointer is closed
         fclose(ip);
     }
 
