@@ -309,7 +309,7 @@ int main(int argc, char *argv[])
     char *errorMessages[] = {"Identifier too long", "Number too long", "Invalid symbol"};
 
     // Array for collecting error messages
-    char *errorCollect[] = {""};
+    char *errorCollect[strmax + 1] = {""};
 
     // Array to store the token list
     int tokenList[strmax + 1] = {0}; // to store all the tokens
