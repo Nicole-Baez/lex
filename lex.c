@@ -359,7 +359,7 @@ int main(int argc, char *argv[])
             // Char is printed
             putchar(ch);
 
-            // Checks if char is a letter or a number
+            // Checks if char is a letter
             if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'))
             {
                 i = 0;
