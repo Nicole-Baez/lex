@@ -1,6 +1,3 @@
 begin
-x;
-91;
-hshhdhshbhfbhsfbsbh;
-56738399;
+    x := 12345678910000;
 end .

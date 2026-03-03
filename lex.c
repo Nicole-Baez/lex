@@ -360,21 +360,17 @@ int main(int argc, char *argv[])
             putchar(ch);
 
             // Checks if char is a letter or a number
-            if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= 0 && ch <= 9))
+            if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'))
             {
-
-                // If it is, it's added to the buffer
-                bufferLexeme[i] = ch;
-
+                i = 0;
                 /*
                  If the rest of the characters being read are also letters or numbers it can potentially
                  be a reserved word or an identifier
                 */
-                while ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= 0 && ch <= 9))
+                while ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9'))
                 {
                     // Chars are added to the buffer until a non letter and non number character is reached
                     bufferLexeme[i] = ch;
-
                     // Moves along the ip pointer and gathers the character
                     ch = fgetc(ip);
 
@@ -386,7 +382,9 @@ int main(int argc, char *argv[])
                 }
 
                 // Null terminator is added at the end
-                bufferLexeme[i + 1] = '\0';
+                bufferLexeme[i] = '\0';
+                // Push back the non-letter/digit char
+                ungetc(ch, ip);
 
                 // Identifier index variable is declared (it will be sent as a pointer so that it can be updated without it needing to be returned)
                 int identifierIndex = -1;
@@ -468,6 +466,10 @@ int main(int argc, char *argv[])
 
                     tokenList[tokenCount] = skipsym;
                     tokenCount++;
+
+                    lexemes[lexLength] = malloc(strlen(bufferLexeme) + 1);
+                    strcpy(lexemes[lexLength], bufferLexeme);
+                    lexLength++;
                 }
 
                 else
