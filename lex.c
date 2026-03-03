@@ -321,7 +321,7 @@ int main(int argc, char *argv[])
     char *errorMessages[] = {"Identifier too long", "Number too long", "Invalid symbol"};
 
     // Array for collecting error messages
-    char *errorCollect[] = {""};
+    char *errorCollect[strmax + 1] = {""};
     // Array to store the token list
     int tokenList[strmax + 1] = {0}; // to store all the tokens
 
@@ -375,7 +375,7 @@ int main(int argc, char *argv[])
                     ch = fgetc(ip);
 
                     // Char is printed
-                    putchar(ch);
+                    // putchar(ch);
 
                     // Buffer tracker is updated
                     i++;
@@ -450,12 +450,12 @@ int main(int argc, char *argv[])
                 {
                     bufferLexeme[i] = ch;
                     ch = fgetc(ip);
-                    putchar(ch);
+                    // putchar(ch);
                     i++;
                 }
 
-                bufferLexeme[i + 1] = '\0';
-
+                bufferLexeme[i] = '\0';
+                ungetc(ch, ip);
                 int token = numbersym;
 
                 if (strlen(bufferLexeme) > 5)
@@ -489,7 +489,7 @@ int main(int argc, char *argv[])
                 i = 0;
             }
 
-            if (!((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= 0 && ch <= 9)))
+            if (!((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')))
             {
 
                 bufferLexeme[i] = ch;
@@ -498,7 +498,7 @@ int main(int argc, char *argv[])
                 {
 
                     ch = fgetc(ip);
-                    if (!((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= 0 && ch <= 9)))
+                    if (!((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')))
                     {
 
                         bufferLexeme[i + 1] = ch;
@@ -508,7 +508,23 @@ int main(int argc, char *argv[])
 
                     int token = mapSpecialSym(bufferLexeme);
 
-                    if (token != 0)
+                    if (token == skipsym)
+                    {
+                        errorCollect[errorMesNum] = errorMessages[2]; // "Invalid symbol"
+                        errorMesNum++;
+
+                        tokenList[tokenCount] = skipsym;
+                        tokenCount++;
+
+                        lexemes[lexLength] = malloc(strlen(bufferLexeme) + 1);
+                        strcpy(lexemes[lexLength], bufferLexeme);
+                        lexLength++;
+
+                        bufferLexeme[0] = '\0';
+                        i = 0;
+                        continue;
+                    }
+                    else if (token != 0)
                     {
                         tokenList[tokenCount] = token;
                         tokenCount++;
@@ -517,7 +533,6 @@ int main(int argc, char *argv[])
                         strcpy(lexemes[lexLength], bufferLexeme);
                         lexLength++;
 
-                        // clear the buffer
                         bufferLexeme[0] = '\0';
                         i = 0;
                         continue;
@@ -541,22 +556,6 @@ int main(int argc, char *argv[])
 
                     // llamar
                     int token = mapSpecialSym(bufferLexeme);
-
-                    if (token != 0)
-                    {
-
-                        tokenList[tokenCount] = token;
-                        tokenCount++;
-
-                        lexemes[lexLength] = malloc(strlen(bufferLexeme) + 1);
-                        strcpy(lexemes[lexLength], bufferLexeme);
-                        lexLength++;
-
-                        // clear the buffer
-                        bufferLexeme[0] = '\0';
-                        i = 0;
-                        continue;
-                    }
                 }
 
                 else
@@ -567,7 +566,23 @@ int main(int argc, char *argv[])
 
                     int token = mapSpecialSym(bufferLexeme);
 
-                    if (token != 0)
+                    if (token == skipsym)
+                    {
+                        errorCollect[errorMesNum] = errorMessages[2]; // "Invalid symbol"
+                        errorMesNum++;
+
+                        tokenList[tokenCount] = skipsym;
+                        tokenCount++;
+
+                        lexemes[lexLength] = malloc(strlen(bufferLexeme) + 1);
+                        strcpy(lexemes[lexLength], bufferLexeme);
+                        lexLength++;
+
+                        bufferLexeme[0] = '\0';
+                        i = 0;
+                        continue;
+                    }
+                    else if (token != 0)
                     {
                         tokenList[tokenCount] = token;
                         tokenCount++;
@@ -576,7 +591,6 @@ int main(int argc, char *argv[])
                         strcpy(lexemes[lexLength], bufferLexeme);
                         lexLength++;
 
-                        // clear the buffer
                         bufferLexeme[0] = '\0';
                         i = 0;
                         continue;
